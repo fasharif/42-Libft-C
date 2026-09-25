@@ -19,12 +19,13 @@
 */
 
 #include "libft.h"
+#include <stdint.h>
 
 void	*ft_calloc(size_t count, size_t size)
 {
 	char	*r;
 
-	if (size && count > __LONG_MAX__)
+	if (size && count > SIZE_MAX / size)
 		return (NULL);
 	r = malloc(count * size);
 	if (!r)

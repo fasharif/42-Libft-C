@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux (${{ matrix.compiler }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build with warnings as errors
+        run: make CC=${{ matrix.compiler }}
+
+      - name: Tests
+        run: make CC=${{ matrix.compiler }} test
+
+  macos:
+    # Apple Silicon: va_list is not an array there, so code that passes it by value breaks.
+    name: macOS (Apple Silicon)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build with warnings as errors
+        run: make
+
+      - name: Tests
+        run: make test
+
+  sanitizers:
+    name: AddressSanitizer, LeakSanitizer and UBSan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Recent kernels use more address-space randomisation than older sanitizer runtimes expect.
+      - name: Reduce ASLR entropy for the sanitizer runtime
+        run: sudo sysctl vm.mmap_rnd_bits=28
+
+      - name: Tests under sanitizers
+        run: >-
+          make test
+          CFLAGS="-Wall -Wextra -Werror -g -fsanitize=address,undefined -fno-sanitize-recover=all"
+          LDFLAGS="-fsanitize=address,undefined"

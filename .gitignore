@@ -1,0 +1,6 @@
+# Build output
+*.o
+*.a
+/tests/test_libft
+/tests/test_printf
+/tests/test_gnl
